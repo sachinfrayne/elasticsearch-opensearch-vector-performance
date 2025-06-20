@@ -3,47 +3,47 @@ kind: Elasticsearch
 metadata:
   name: es-cluster
 spec:
-  version: 8.14.0
+  version: 9.0.2
   http:
     service:
       spec:
         type: ClusterIP
   nodeSets:
-  - name: default
-    count: 3
-    podTemplate:
-      spec:
-        nodeSelector:
-          cloud.google.com/gke-nodepool: elasticsearch-nodepool-32
-        initContainers:
-        - name: sysctl
-          securityContext:
-            privileged: true
-            runAsUser: 0
-          command: ['sh', '-c', 'sysctl -w vm.max_map_count=262144']
-        containers:
-          - name: elasticsearch
+    - name: default
+      count: 3
+      podTemplate:
+        spec:
+          nodeSelector:
+            cloud.google.com/gke-nodepool: elasticsearch-nodepool
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                limits:
+                  memory: 12Gi
+                  cpu: 3
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            storageClassName: premium-rwo
+            accessModes:
+              - ReadWriteOnce
             resources:
-              limits:
-                memory: 64Gi
-                cpu: 16
-    volumeClaimTemplates:
-    - metadata:
-        name: elasticsearch-data
-      spec:
-        storageClassName: premium-rwo
-        accessModes:
-        - ReadWriteOnce
-        resources:
-          requests:
-            storage: 300Gi
+              requests:
+                storage: 300Gi
 ---
 apiVersion: kibana.k8s.elastic.co/v1
 kind: Kibana
 metadata:
   name: es-cluster
 spec:
-  version: 8.14.0
+  version: 9.0.2
   http:
     service:
       spec:
@@ -51,7 +51,7 @@ spec:
   podTemplate:
     spec:
       nodeSelector:
-          cloud.google.com/gke-nodepool: elasticsearch-nodepool-2
+        cloud.google.com/gke-nodepool: kibana-nodepool
   count: 1
   elasticsearchRef:
     name: es-cluster
